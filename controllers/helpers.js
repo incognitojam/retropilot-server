@@ -10,7 +10,7 @@ function formatDuration(durationSeconds) {
     mins = mins % 60;
     const days = Math.floor(hours / 24);
     hours = hours % 24;
-    
+
     let response = '';
     if (days > 0) response += days + 'd ';
     if (hours > 0 || days > 0) response += hours + 'h ';

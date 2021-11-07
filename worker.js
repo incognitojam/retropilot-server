@@ -27,7 +27,7 @@ const startTime=Date.now();
 
 log4js.configure({
     appenders: { logfile: { type: "file", filename: "worker.log" }, out: { type: "console"} },
-    categories: { default: { appenders: ['out', 'logfile'], level: 'info' } }    
+    categories: { default: { appenders: ['out', 'logfile'], level: 'info' } }
 });
 
 const logger = log4js.getLogger('default');
@@ -40,7 +40,7 @@ function initializeStorage() {
     else {
         logger.error("Unable to verify storage path '"+config.storagePath+"', check filesystem / permissions");
         process.exit();
-    }    
+    }
 }
 
 
@@ -145,7 +145,7 @@ function moveUploadedFile(buffer, directory, filename) {
         logger.error("moveUploadedFile failed, .. in directory or filename");
         return false;
     }
-    
+
     if (config.storagePath.lastIndexOf("/")!==config.storagePath.length-1)
         directory='/'+directory;
     if (directory.lastIndexOf("/")!==directory.length-1)
@@ -154,14 +154,14 @@ function moveUploadedFile(buffer, directory, filename) {
     const finalPath = mkDirByPathSync(config.storagePath+directory, {isRelativeToScript: (config.storagePath.indexOf("/")===0 ? false : true)});
     if (finalPath && finalPath.length>0) {
         if (writeFileSync(finalPath+"/"+filename, buffer, 0o660)) {
-            logger.info("moveUploadedFile successfully written '"+(finalPath+"/"+filename)+"'");            
+            logger.info("moveUploadedFile successfully written '"+(finalPath+"/"+filename)+"'");
             return finalPath+"/"+filename;
         }
-        logger.error("moveUploadedFile failed to writeFileSync");            
+        logger.error("moveUploadedFile failed to writeFileSync");
         return false;
     }
     logger.error("moveUploadedFile invalid final path, check permissions to create / write '"+(config.storagePath+directory)+"'");
-    return false;    
+    return false;
 }
 
 
@@ -309,7 +309,7 @@ function processSegmentRLog(rLogPath) {
             try {
                 if (obj['LogMonoTime']!==undefined && obj['LogMonoTime']-rlog_lastTsInternal>=1000000*1000*0.99 && obj['GpsLocation']!==undefined) {
                     logger.info('processSegmentRLog GpsLocation @ '+obj['LogMonoTime']+': '+obj['GpsLocation']['Latitude']+' '+obj['GpsLocation']['Longitude']);
-                
+
                     if (rlog_prevLatInternal!=-1000) {
                         const lat1=rlog_prevLatInternal;
                         const lat2=obj['GpsLocation']['Latitude'];
@@ -331,7 +331,7 @@ function processSegmentRLog(rLogPath) {
                 }
                 else if (obj['LogMonoTime']!==undefined && obj['LogMonoTime']-rlog_lastTsExternal>=1000000*1000*0.99 && obj['GpsLocationExternal']!==undefined) {
                     logger.info('processSegmentRLog GpsLocationExternal @ '+obj['LogMonoTime']+': '+obj['GpsLocationExternal']['Latitude']+' '+obj['GpsLocationExternal']['Longitude']);
-                
+
                     if (rlog_prevLatExternal!=-1000) {
                         const lat1=rlog_prevLatExternal;
                         const lat2=obj['GpsLocationExternal']['Latitude'];
@@ -361,7 +361,7 @@ function processSegmentRLog(rLogPath) {
             } catch(exception) {
 
             }
-        });  
+        });
       }
   );
 }
@@ -385,7 +385,7 @@ function processSegmentVideo(qcameraPath) {
 }
 
 function processSegmentsRecursive() {
-    if (segmentProcessQueue.length<=segmentProcessPosition) 
+    if (segmentProcessQueue.length<=segmentProcessPosition)
         return updateDrives();
 
     const segmentWrapper = segmentProcessQueue[segmentProcessPosition];
@@ -402,24 +402,24 @@ function processSegmentsRecursive() {
     Promise.all([p1, p2]).then((values) => {
         (async () => {
             logger.info('processSegmentsRecursive '+segment.dongle_id+' '+segment.drive_identifier+' '+segment.segment_id+' internal gps: '+(Math.round(rlog_totalDistInternal*100)/100)+'m, external gps: '+(Math.round(rlog_totalDistExternal*100)/100)+'m, duration: '+qcamera_duration+'s');
-            
+
             const driveSegmentResult = await dbProtectedRun(
-                'UPDATE drive_segments SET duration = ?, distance_meters = ?, is_processed = ?, upload_complete = ?, is_stalled = ? WHERE id = ?', 
+                'UPDATE drive_segments SET duration = ?, distance_meters = ?, is_processed = ?, upload_complete = ?, is_stalled = ? WHERE id = ?',
                     qcamera_duration, Math.round(Math.max(rlog_totalDistInternal, rlog_totalDistExternal)*10)/10, true, uploadComplete, false,
                     segment.id
             );
 
             if (driveSegmentResult===null) // if the update failed, stop right here with segment processing and try to update the drives at least
                 segmentProcessPosition=segmentProcessQueue.length;
-            
+
             affectedDrives[driveIdentifier]=true;
             if (rlog_CarParams!=null)
                 affectedDriveCarParams[driveIdentifier]=rlog_CarParams;
             if (rlog_InitData!=null)
                 affectedDriveInitData[driveIdentifier]=rlog_InitData;
-                
+
             segmentProcessPosition++;
-            setTimeout(function() {processSegmentsRecursive();}, 0);  
+            setTimeout(function() {processSegmentsRecursive();}, 0);
         })();
     }).catch((error) => {
         logger.error(error);
@@ -454,7 +454,6 @@ async function updateSegments() {
             for (const i in directoryTree.children) {
                 fileStatus[directoryTree.children[i].name]=directoryTree.children[i].path;
             }
-            
 
 
             let uploadComplete=false;
@@ -466,18 +465,18 @@ async function updateSegments() {
             }
             else if (uploadComplete) {
                 logger.info('updateSegments uploadComplete for '+segment.dongle_id+' '+segment.drive_identifier+' '+segment.segment_id);
-                
+
                 const driveSegmentResult = await dbProtectedRun(
-                            'UPDATE drive_segments SET upload_complete = ?, is_stalled = ? WHERE id = ?', 
+                            'UPDATE drive_segments SET upload_complete = ?, is_stalled = ? WHERE id = ?',
                                 true, false, segment.id);
-                
+
                 affectedDrives[segment.dongle_id+"|"+segment.drive_identifier]=true;
             }
             else if (Date.now()-segment.created>10*24*3600*1000) { // ignore non-uploaded segments after 10 days until a new upload_url is requested (which resets is_stalled)
                 logger.info('updateSegments isStalled for '+segment.dongle_id+' '+segment.drive_identifier+' '+segment.segment_id);
 
                 const driveSegmentResult = await dbProtectedRun(
-                    'UPDATE drive_segments SET is_stalled = ? WHERE id = ?', 
+                    'UPDATE drive_segments SET is_stalled = ? WHERE id = ?',
                         true, segment.id);
 
             }
@@ -505,9 +504,9 @@ async function updateDevices() {
         const devicePath=config.storagePath+device.dongle_id+"/"+dongleIdHash;
         const deviceQuotaMb = Math.round(parseInt(execSync("du -s "+devicePath+" | awk -F'\t' '{print $1;}'").toString())/1024);
         logger.info("updateDevices device "+dongleId+" has an updated storage_used of: "+deviceQuotaMb+" MB");
-        
+
         const deviceResult = await dbProtectedRun(
-            'UPDATE devices SET storage_used = ? WHERE dongle_id = ?', 
+            'UPDATE devices SET storage_used = ? WHERE dongle_id = ?',
                 deviceQuotaMb, device.dongle_id);
     }
     affectedDevices={};
@@ -544,7 +543,7 @@ async function updateDrives() {
 
                     playlistSegmentStrings+=`#EXTINF:`+drive_segments[t].duration+`,`+drive_segments[t].segment_id+`\n`+
                         driveUrl+`/`+drive_segments[t].segment_id+`/qcamera.ts\n`;
-                }            
+                }
             }
         }
 
@@ -555,8 +554,8 @@ async function updateDrives() {
                 const driveIdentifierHash = crypto.createHmac('sha256', config.applicationSalt).update(driveIdentifier).digest('hex');
                 filesize = parseInt(execSync("du -s "+drivePath+" | awk -F'\t' '{print $1;}'").toString()); // in kilobytes
             }
-            catch (exception) {}    
-        } 
+            catch (exception) {}
+        }
 
         let metadata = {};
         try {
@@ -570,15 +569,15 @@ async function updateDrives() {
         if (affectedDriveCarParams[key]!=undefined && metadata['CarParams']==undefined)  {
             metadata['CarParams']=affectedDriveCarParams[key];
         }
-        
+
         logger.info("updateDrives drive "+dongleId+" "+driveIdentifier+" uploadComplete: "+uploadComplete);
-        
+
         const driveResult = await dbProtectedRun(
-            'UPDATE drives SET distance_meters = ?, duration = ?, upload_complete = ?, is_processed = ?, filesize = ?, metadata = ? WHERE id = ?', 
+            'UPDATE drives SET distance_meters = ?, duration = ?, upload_complete = ?, is_processed = ?, filesize = ?, metadata = ? WHERE id = ?',
                 Math.round(totalDistanceMeters), totalDurationSeconds, uploadComplete, isProcessed, filesize, JSON.stringify(metadata), drive.id);
 
         affectedDevices[dongleId]=true;
-        
+
         if (isProcessed) {
             // create the playlist file m3u8 for cabana
             const playlist = `#EXTM3U\n`+
@@ -607,7 +606,7 @@ async function deleteExpiredDrives() {
         for (let t=0; t<expiredDrives.length; t++) {
             logger.info("deleteExpiredDrives drive "+expiredDrives[t].dongle_id+" "+expiredDrives[t].identifier+" is older than "+config.deviceDriveExpirationDays+" days, set is_deleted=true");
             const driveResult = await dbProtectedRun(
-                'UPDATE drives SET is_deleted = ? WHERE id = ?', 
+                'UPDATE drives SET is_deleted = ? WHERE id = ?',
                     true, expiredDrives[t].id);
         }
     }
@@ -616,7 +615,7 @@ async function deleteExpiredDrives() {
 
 async function removeDeletedDrivesPhysically() {
     const deletedDrives = await dbProtectedAll('SELECT * FROM drives WHERE is_deleted = ? AND is_physically_removed = ?', true, false);
-    if (deletedDrives==null) 
+    if (deletedDrives==null)
         return;
     for (let t=0; t<deletedDrives.length; t++) {
         logger.info("removeDeletedDrivesPhysically drive "+deletedDrives[t].dongle_id+" "+deletedDrives[t].identifier+" is deleted, remove physical files and clean database");
@@ -627,15 +626,15 @@ async function removeDeletedDrivesPhysically() {
 
         const drivePath = config.storagePath+deletedDrives[t].dongle_id+"/"+dongleIdHash+"/"+driveIdentifierHash+"";
         logger.info("removeDeletedDrivesPhysically drive "+deletedDrives[t].dongle_id+" "+deletedDrives[t].identifier+" storage path is "+drivePath);
-        try {            
+        try {
             const driveResult = await dbProtectedRun(
-                'UPDATE drives SET is_physically_removed = ? WHERE id = ?', 
+                'UPDATE drives SET is_physically_removed = ? WHERE id = ?',
                     true, deletedDrives[t].id);
-            
+
             const driveSegmentResult = await dbProtectedRun(
-                'DELETE FROM drive_segments WHERE drive_identifier = ? AND dongle_id = ?', 
+                'DELETE FROM drive_segments WHERE drive_identifier = ? AND dongle_id = ?',
                 deletedDrives[t].identifier, deletedDrives[t].dongle_id);
-            
+
             if (driveResult!=null && driveSegmentResult!=null) deleteFolderRecursive(drivePath, { recursive: true });
             affectedDevices[deletedDrives[t].dongle_id]=true;
         } catch (exception) {
@@ -657,7 +656,7 @@ async function deleteOverQuotaDrives() {
         if (driveNormal!=null) {
             logger.info("deleteOverQuotaDrives drive "+driveNormal.dongle_id+" "+driveNormal.identifier+" (normal) is deleted for over-quota");
             const driveResult = await dbProtectedRun(
-                'UPDATE drives SET is_deleted = ? WHERE id = ?', 
+                'UPDATE drives SET is_deleted = ? WHERE id = ?',
                     true, driveNormal.id);
             foundDriveToDelete=true;
         }
@@ -667,7 +666,7 @@ async function deleteOverQuotaDrives() {
             if (drivePreserved!=null) {
                 logger.info("deleteOverQuotaDrives drive "+drivePreserved.dongle_id+" "+drivePreserved.identifier+" (preserved!) is deleted for over-quota");
                 const driveResult = await dbProtectedRun(
-                    'UPDATE drives SET is_deleted = ? WHERE id = ?', 
+                    'UPDATE drives SET is_deleted = ? WHERE id = ?',
                         true, drivePreserved.id);
                 foundDriveToDelete=true;
             }
@@ -744,7 +743,7 @@ async function mainWorkerLoop() {
             await removeDeletedDrivesPhysically();
             lastCleaningTime=Date.now();
         }
-        
+
         setTimeout(function() {updateSegments();}, 5000);
     } catch (e) {
         logger.error(e);
@@ -788,5 +787,5 @@ lockfile.lock('retropilot_worker.lock', { realpath: false, stale: 90000, update:
     })();
 }).catch((e) => {
     console.error(e)
-    process.exit();	  		  
+    process.exit();
 });
