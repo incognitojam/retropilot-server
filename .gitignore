@@ -9,4 +9,4 @@ database.sqlite
 *.iml
 test/.devKeys
 npm-debug.log
-.env
+*.env
