@@ -67,7 +67,7 @@ const web = async () => {
 
     app.get('/', async (req, res) => {
         res.status(200);
-        var response = '<html style="font-family: monospace"><h2>404 Not found</h2>' +
+        const response = '<html style="font-family: monospace"><h2>404 Not found</h2>' +
             'Are you looking for the <a href="/useradmin">useradmin dashboard</a>?';
         res.send(response);
     })
@@ -99,12 +99,12 @@ lockfile.lock('retropilot_server.lock', {realpath: false, stale: 30000, update: 
         (async () => {
 
 
-            var privateKey = fs.readFileSync(config.sslKey, 'utf8');
-            var certificate = fs.readFileSync(config.sslCrt, 'utf8');
-            var sslCredentials = {key: privateKey, cert: certificate/* ,    ca: fs.readFileSync('certs/ca.crt') */};
+            const privateKey = fs.readFileSync(config.sslKey, 'utf8');
+            const certificate = fs.readFileSync(config.sslCrt, 'utf8');
+            const sslCredentials = {key: privateKey, cert: certificate/* ,    ca: fs.readFileSync('certs/ca.crt') */};
 
-            var httpServer = http.createServer(app);
-            var httpsServer = https.createServer(sslCredentials, app);
+            const httpServer = http.createServer(app);
+            const httpsServer = https.createServer(sslCredentials, app);
 
 
 

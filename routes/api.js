@@ -25,16 +25,16 @@ router.put('/backend/post_upload', bodyParser.raw({
     limit: '100000kb',
     type: '*/*'
 }), runAsyncWrapper(async (req, res) => {
-    var buf = new Buffer(req.body.toString('binary'), 'binary');
+    const buf = new Buffer(req.body.toString('binary'), 'binary');
     logger.info("HTTP.PUT /backend/post_upload for dongle " + req.query.dongleId + " with body length: " + buf.length);
 
-    var dongleId = req.query.dongleId;
-    var ts = req.query.ts;
+    const dongleId = req.query.dongleId;
+    const ts = req.query.ts;
 
     if (req.query.file.indexOf("boot") != 0 && req.query.file.indexOf("crash") != 0) { // drive file upload
-        var filename = req.query.file;
-        var directory = req.query.dir;
-        var token = crypto.createHmac('sha256', config.applicationSalt).update(dongleId + filename + directory + ts).digest('hex');
+        const filename = req.query.file;
+        const directory = req.query.dir;
+        const token = crypto.createHmac('sha256', config.applicationSalt).update(dongleId + filename + directory + ts).digest('hex');
 
         logger.info("HTTP.PUT /backend/post_upload DRIVE upload with filename: " + filename + ", directory: " + directory + ", token: " + req.query.token);
 
@@ -45,7 +45,7 @@ router.put('/backend/post_upload', bodyParser.raw({
 
         } else {
             logger.info("HTTP.PUT /backend/post_upload permissions checked, calling moveUploadedFile");
-            var moveResult = controllers.storage.moveUploadedFile(buf, directory, filename);
+            const moveResult = controllers.storage.moveUploadedFile(buf, directory, filename);
             if (moveResult === false) {
                 logger.error("HTTP.PUT /backend/post_upload moveUploadedFile failed");
                 res.status(500);
@@ -57,9 +57,9 @@ router.put('/backend/post_upload', bodyParser.raw({
             }
         }
     } else {  // boot or crash upload
-        var filename = req.query.file;
-        var directory = req.query.dir;
-        var token = crypto.createHmac('sha256', config.applicationSalt).update(dongleId + filename + directory + ts).digest('hex');
+        const filename = req.query.file;
+        const directory = req.query.dir;
+        const token = crypto.createHmac('sha256', config.applicationSalt).update(dongleId + filename + directory + ts).digest('hex');
 
         logger.info("HTTP.PUT /backend/post_upload BOOT or CRASH upload with filename: " + filename + ", token: " + req.query.token);
         if (token !== req.query.token) {
@@ -69,7 +69,7 @@ router.put('/backend/post_upload', bodyParser.raw({
 
         } else {
             logger.info("HTTP.PUT /backend/post_upload permissions checked, calling moveUploadedFile");
-            var moveResult = controllers.storage.moveUploadedFile(buf, directory, filename);
+            const moveResult = controllers.storage.moveUploadedFile(buf, directory, filename);
             if (moveResult === false) {
                 logger.error("HTTP.PUT /backend/post_upload moveUploadedFile failed");
                 res.status(500);
@@ -218,7 +218,7 @@ router.get('/v1/devices/:dongleId/owner', runAsyncWrapper(async (req, res) => {
 
 // DRIVE & BOOT/CRASH LOG FILE UPLOAD URL REQUEST
 router.get('/v1.3/:dongleId/upload_url/', runAsyncWrapper(async (req, res) => {
-    var path = req.query.path;
+    let path = req.query.path;
     const dongleId = req.params.dongleId;
     const auth = req.headers.authorization;
     logger.info("HTTP.UPLOAD_URL called for " + req.params.dongleId + " and file " + path + ": " + JSON.stringify(req.headers));
@@ -352,10 +352,10 @@ router.get('/v1.3/:dongleId/upload_url/', runAsyncWrapper(async (req, res) => {
 
 // DEVICE REGISTRATION OR RE-ACTIVATION
 router.post('/v2/pilotauth/', bodyParser.urlencoded({extended: true}), async (req, res) => {
-    var imei1 = req.query.imei;
-    var serial = req.query.serial;
-    var public_key = req.query.public_key;
-    var register_token = req.query.register_token;
+    const imei1 = req.query.imei;
+    const serial = req.query.serial;
+    const public_key = req.query.public_key;
+    const register_token = req.query.register_token;
 
     if (serial == null || serial.length < 5 || public_key == null || public_key.length < 5 || register_token == null || register_token.length < 5) {
         logger.error(`HTTP.V2.PILOTAUTH a required parameter is missing or empty ${JSON.stringify(req.query)}`);
@@ -363,7 +363,7 @@ router.post('/v2/pilotauth/', bodyParser.urlencoded({extended: true}), async (re
         res.send('Malformed Request.');
         return;
     }
-    var decoded = await controllers.authentication.validateJWT(req.query.register_token, public_key);
+    const decoded = await controllers.authentication.validateJWT(req.query.register_token, public_key);
 
 
     if (decoded == null || decoded.register == undefined) {
@@ -377,7 +377,7 @@ router.post('/v2/pilotauth/', bodyParser.urlencoded({extended: true}), async (re
     if (device == null) {
         logger.info("HTTP.V2.PILOTAUTH REGISTERING NEW DEVICE (" + imei1 + ", " + serial + ")");
         while (true) {
-            var dongleId = crypto.randomBytes(4).toString('hex');
+            const dongleId = crypto.randomBytes(4).toString('hex');
             const isDongleIdTaken = await models.__db.get('SELECT * FROM devices WHERE serial = ?', serial);
             if (isDongleIdTaken == null) {
                 const resultingDevice = await models.__db.run(
@@ -408,11 +408,11 @@ router.post('/v2/pilotauth/', bodyParser.urlencoded({extended: true}), async (re
 // RETRIEVES DATASET FOR OUR MODIFIED CABANA - THIS RESPONSE IS USED TO FAKE A DEMO ROUTE
 router.get('/useradmin/cabana_drive/:extendedRouteIdentifier', runAsyncWrapper(async (req, res) => {
 
-    var params = req.params.extendedRouteIdentifier.split('|');
-    var dongleId = params[0];
-    var dongleIdHashReq = params[1];
-    var driveIdentifier = params[2];
-    var driveIdentifierHashReq = params[3];
+    const params = req.params.extendedRouteIdentifier.split('|');
+    const dongleId = params[0];
+    const dongleIdHashReq = params[1];
+    const driveIdentifier = params[2];
+    const driveIdentifierHashReq = params[3];
 
     const drive = await models.__db.get('SELECT * FROM drives WHERE identifier = ? AND dongle_id = ?', driveIdentifier, dongleId);
 
@@ -422,9 +422,9 @@ router.get('/useradmin/cabana_drive/:extendedRouteIdentifier', runAsyncWrapper(a
         return;
     }
 
-    var dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.dongle_id).digest('hex');
-    var driveIdentifierHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.identifier).digest('hex');
-    var driveUrl = config.baseDriveDownloadUrl + drive.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier;
+    const dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.dongle_id).digest('hex');
+    const driveIdentifierHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.identifier).digest('hex');
+    const driveUrl = config.baseDriveDownloadUrl + drive.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier;
 
     if (dongleIdHash != dongleIdHashReq || driveIdentifierHash != driveIdentifierHashReq) {
         res.status(200);
@@ -439,9 +439,9 @@ router.get('/useradmin/cabana_drive/:extendedRouteIdentifier', runAsyncWrapper(a
     }
 
 
-    var logUrls = [];
+    const logUrls = [];
 
-    for (var i = 0; i <= drive.max_segment; i++) {
+    for (let i = 0; i <= drive.max_segment; i++) {
         logUrls.push(driveUrl + '/' + i + '/rlog.bz2');
     }
 

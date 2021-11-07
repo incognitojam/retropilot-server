@@ -22,7 +22,7 @@ function formatDuration(durationSeconds) {
 
 function simpleStringify(object) {
     let simpleObject = {};
-    for (var prop in object) {
+    for (const prop in object) {
         if (!object.hasOwnProperty(prop)) {
             continue;
         }

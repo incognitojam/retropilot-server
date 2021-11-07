@@ -9,7 +9,7 @@ let logger;
 let totalStorageUsed;
 
 function initializeStorage() {
-    var verifiedPath = mkDirByPathSync(config.storagePath, {isRelativeToScript: (config.storagePath.indexOf("/") === 0 ? false : true)});
+    const verifiedPath = mkDirByPathSync(config.storagePath, {isRelativeToScript: (config.storagePath.indexOf("/") === 0 ? false : true)});
     if (verifiedPath != null)
         logger.info("Verified storage path " + verifiedPath);
     else {

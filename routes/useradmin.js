@@ -101,9 +101,9 @@ router.post('/useradmin/register/token', bodyParser.urlencoded({extended: true})
         return;
     }
 
-    var token = crypto.createHmac('sha256', config.applicationSalt).update(email.trim()).digest('hex');
+    const token = crypto.createHmac('sha256', config.applicationSalt).update(email.trim()).digest('hex');
 
-    var infoText = '';
+    let infoText = '';
 
     if (req.body.token === undefined) { // email entered, token request
         logger.info("USERADMIN REGISTRATION sending token to " + htmlspecialchars(email.trim()) + ": \"" + token + "\"");
@@ -123,7 +123,7 @@ router.post('/useradmin/register/token', bodyParser.urlencoded({extended: true})
             {from: config.smtpFrom}
         );
 
-        let message = {
+        const message = {
             from: config.smtpFrom,
             to: email.trim(),
             subject: 'RetroPilot Registration Token',
@@ -216,7 +216,7 @@ router.get('/useradmin/overview', runAsyncWrapper(async (req, res) => {
 
     const devices = await models.__db.all('SELECT * FROM devices WHERE account_id = ? ORDER BY dongle_id ASC', account.id)
 
-    var response = '<html style="font-family: monospace"><h2>Welcome To The RetroPilot Server Dashboard!</h2>' +
+    let response = '<html style="font-family: monospace"><h2>Welcome To The RetroPilot Server Dashboard!</h2>' +
 
         `<br><br><h3>Account Overview</h3>
                 <b>Account:</b> #` + account.id + `<br>
@@ -227,7 +227,7 @@ router.get('/useradmin/overview', runAsyncWrapper(async (req, res) => {
                     <tr><th>dongle_id</th><th>device_type</th><th>created</th><th>last_ping</th><th>storage_used</th></tr>
                 `;
 
-    for (var i in devices) {
+    for (const i in devices) {
         response += '<tr><td><a href="/useradmin/device/' + devices[i].dongle_id + '">' + devices[i].dongle_id + '</a></td><td>' + devices[i].device_type + '</td><td>' + controllers.helpers.formatDate(devices[i].created) + '</td><td>' + controllers.helpers.formatDate(devices[i].last_ping) + '</td><td>' + devices[i].storage_used + ' MB</td></tr>';
     }
     response += `</table>
@@ -283,13 +283,13 @@ router.get('/useradmin/unpair_device/:dongleId', runAsyncWrapper(async (req, res
             return;
         }
 
-        var qrCodeParts = req.body.qr_string.split("--"); // imei, serial, jwtToken
+        const qrCodeParts = req.body.qr_string.split("--"); // imei, serial, jwtToken
 
         const device = await models.__db.get('SELECT * FROM devices WHERE imei = ? AND serial = ?', qrCodeParts[0], qrCodeParts[1]);
         if (device == null) {
             res.redirect('/useradmin/overview?linkstatus=' + encodeURIComponent('Device not registered on Server'));
         }
-        var decoded = controllers.authentication.validateJWT(qrCodeParts[2], device.public_key);
+        const decoded = controllers.authentication.validateJWT(qrCodeParts[2], device.public_key);
         if (decoded == null || decoded.pair == undefined) {
             res.redirect('/useradmin/overview?linkstatus=' + encodeURIComponent('Device QR Token is invalid or has expired'));
         }
@@ -325,17 +325,17 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
 
     const drives = await models.__db.all('SELECT * FROM drives WHERE dongle_id = ? AND is_deleted = ? ORDER BY created DESC', device.dongle_id, false);
 
-    var dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(device.dongle_id).digest('hex');
+    const dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(device.dongle_id).digest('hex');
 
     const bootlogDirectoryTree = dirTree(config.storagePath + device.dongle_id + "/" + dongleIdHash + "/boot/", {attributes: ['size']});
-    var bootlogFiles = [];
+    const bootlogFiles = [];
     if (bootlogDirectoryTree != undefined) {
-        for (var i = 0; i < bootlogDirectoryTree.children.length; i++) {
+        for (let i = 0; i < bootlogDirectoryTree.children.length; i++) {
 
-            var timeSplit = bootlogDirectoryTree.children[i].name.replace('boot-', '').replace('crash-', '').replace('\.bz2', '').split('--');
-            var timeString = timeSplit[0] + ' ' + timeSplit[1].replace(/-/g, ':');
+            const timeSplit = bootlogDirectoryTree.children[i].name.replace('boot-', '').replace('crash-', '').replace('\.bz2', '').split('--');
+            const timeString = timeSplit[0] + ' ' + timeSplit[1].replace(/-/g, ':');
 
-            var dateObj = null;
+            let dateObj = null;
             try {dateObj = Date.parse(timeString);} catch (exception) {}
             if (!dateObj) dateObj = new Date(0);
 
@@ -349,16 +349,16 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
     }
 
     const crashlogDirectoryTree = dirTree(config.storagePath + device.dongle_id + "/" + dongleIdHash + "/crash/", {attributes: ['size']});
-    var crashlogFiles = [];
+    const crashlogFiles = [];
     if (crashlogDirectoryTree != undefined) {
-        for (var i = 0; i < crashlogDirectoryTree.children.length; i++) {
+        for (let i = 0; i < crashlogDirectoryTree.children.length; i++) {
 
-            var timeSplit = crashlogDirectoryTree.children[i].name.replace('boot-', '').replace('crash-', '').replace('\.bz2', '').split('--');
-            var timeString = timeSplit[0] + ' ' + timeSplit[1].replace(/-/g, ':');
+            const timeSplit = crashlogDirectoryTree.children[i].name.replace('boot-', '').replace('crash-', '').replace('\.bz2', '').split('--');
+            let timeString = timeSplit[0] + ' ' + timeSplit[1].replace(/-/g, ':');
             if (timeString.indexOf("_")>0)
                 timeString = timeString.split("_")[0];
 
-            var dateObj = null;
+            let dateObj = null;
             try {dateObj = Date.parse(timeString);} catch (exception) {}
             if (!dateObj) dateObj = new Date(0);
 
@@ -372,7 +372,7 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
     }
 
 
-    var response = '<html style="font-family: monospace"><h2>Welcome To The RetroPilot Server Dashboard!</h2>' +
+    let response = '<html style="font-family: monospace"><h2>Welcome To The RetroPilot Server Dashboard!</h2>' +
 
         `
                 <a href="/useradmin/overview">< < < Back To Overview</a>
@@ -393,7 +393,7 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
             <table border=1 cellpadding=2 cellspacing=2>
             <tr><th>date</th><th>file</th><th>size</th></tr>
         `;
-    for (var i = 0; i < Math.min(5, bootlogFiles.length); i++) {
+    for (let i = 0; i < Math.min(5, bootlogFiles.length); i++) {
         response += `<tr><td>` + controllers.helpers.formatDate(bootlogFiles[i].date) + `</td><td><a href="` + config.baseDriveDownloadUrl + device.dongle_id + "/" + dongleIdHash + "/boot/" + bootlogFiles[i].name + `" target=_blank>` + bootlogFiles[i].name + `</a></td><td>` + bootlogFiles[i].size + `</td></tr>`;
     }
     response += `</table><br><br>`;
@@ -402,7 +402,7 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
             <table border=1 cellpadding=2 cellspacing=2>
             <tr><th>date</th><th>file</th><th>size</th></tr>
         `;
-    for (var i = 0; i < Math.min(5, crashlogFiles.length); i++) {
+    for (let i = 0; i < Math.min(5, crashlogFiles.length); i++) {
         response += `<tr><td>` + controllers.helpers.formatDate(crashlogFiles[i].date) + `</td><td><a href="` + config.baseDriveDownloadUrl + device.dongle_id + "/" + dongleIdHash + "/crash/" + crashlogFiles[i].name + `" target=_blank>` + crashlogFiles[i].name + `</a></td><td>` + crashlogFiles[i].size + `</td></tr>`;
     }
     response += `</table><br><br>`;
@@ -413,7 +413,7 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
         <tr><th>identifier</th><th>car</th><th>version</th><th>filesize</th><th>duration</th><th>distance_meters</th><th>upload_complete</th><th>is_processed</th><th>upload_date</th><th>actions</th></tr>
     `;
 
-    for (var i in drives) {
+    for (const i in drives) {
         let vehicle="";
         let version="";
         let metadata={};
@@ -506,12 +506,12 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
         return;
     }
 
-    var dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(device.dongle_id).digest('hex');
-    var driveIdentifierHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.identifier).digest('hex');
+    const dongleIdHash = crypto.createHmac('sha256', config.applicationSalt).update(device.dongle_id).digest('hex');
+    const driveIdentifierHash = crypto.createHmac('sha256', config.applicationSalt).update(drive.identifier).digest('hex');
 
-    var driveUrl = config.baseDriveDownloadUrl + device.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier + "/";
+    const driveUrl = config.baseDriveDownloadUrl + device.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier + "/";
 
-    var cabanaUrl = null;
+    let cabanaUrl = null;
     if (drive.is_processed) {
         cabanaUrl = config.cabanaUrl + '?retropilotIdentifier=' + device.dongle_id + '|' + dongleIdHash + '|' + drive.identifier + '|' + driveIdentifierHash + '&retropilotHost=' + encodeURIComponent(config.baseUrl) + '&demo=1"';
     }
@@ -542,7 +542,7 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
     const directoryTree = dirTree(config.storagePath + device.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier);
 
 
-    var response = `<html style="font-family: monospace">
+    let response = `<html style="font-family: monospace">
                 <head>
                     <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
                     <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
@@ -596,7 +596,7 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
                         <source src="`+driveUrl+`/qcamera.m3u8" type='application/x-mpegURL'>
                     </video>
                     <script>
-                    var player = videojs('drive_preview',
+                    const player = videojs('drive_preview',
                     {
                         "controls": true, "autoplay": false, "preload": "auto",
                         "controlBar": {
@@ -605,19 +605,19 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
                     }
                     );
                     player.on('timeupdate', function () {
-                        var segment = get_current_segment_info(this);
+                        const segment = get_current_segment_info(this);
                         document.getElementById('current_preview_segment').textContent='(Segment: '+segment[0]+' | '+segment[1]+'% - Timestamp: '+segment[2]+')';
                     });
                     
                     function get_current_segment_info(obj, old_segment = null) {
-                        var target_media = obj.tech().vhs.playlists.media();
+                        const target_media = obj.tech().vhs.playlists.media();
                         if (!target_media) {
                             return [0, 0, 0];    
                         }
-                        var snapshot_time = obj.currentTime();
-                        var segment;
-                        var segment_time;
-                        for (var i = 0, l = target_media.segments.length; i < l; i++) {
+                        const snapshot_time = obj.currentTime();
+                        let segment;
+                        let segment_time;
+                        for (let i = 0, l = target_media.segments.length; i < l; i++) {
                             if (snapshot_time < target_media.segments[i].end) {
                                 segment = target_media.segments[i];
                                 break;
@@ -631,7 +631,7 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
                             segment_time = 0;
                         }
                         if (segment) {
-                            var uri_arr = segment.uri.split("/");
+                            const uri_arr = segment.uri.split("/");
                             return [uri_arr[uri_arr.length-2], Math.round(100/segment.duration*segment_time), Math.round(snapshot_time)];
                         }
                         return [0, 0, Math.round(snapshot_time)];
@@ -650,20 +650,20 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
                 `;
 
 
-    var directorySegments = {};
-    for (var i in directoryTree.children) {
+    const directorySegments = {};
+    for (const i in directoryTree.children) {
         // skip any non-directory entries (for example m3u8 file in the drive directory)
         if (directoryTree.children[i].type != 'directory') continue;
 
-        var segment = directoryTree.children[i].name;
+        const segment = directoryTree.children[i].name;
 
 
-        var qcamera = '--';
-        var fcamera = '--';
-        var dcamera = '--';
-        var qlog = '--';
-        var rlog = '--';
-        for (var c in directoryTree.children[i].children) {
+        let qcamera = '--';
+        let fcamera = '--';
+        let dcamera = '--';
+        let qlog = '--';
+        let rlog = '--';
+        for (const c in directoryTree.children[i].children) {
             if (directoryTree.children[i].children[c].name == 'fcamera.hevc') fcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
             if (directoryTree.children[i].children[c].name == 'dcamera.hevc') fcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
             if (directoryTree.children[i].children[c].name == 'qcamera.ts') qcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
@@ -671,8 +671,8 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
             if (directoryTree.children[i].children[c].name == 'rlog.bz2') rlog = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
         }
 
-        var isProcessed = '?';
-        var isStalled = '?';
+        let isProcessed = '?';
+        let isStalled = '?';
 
         const drive_segment = await models.__db.get('SELECT * FROM drive_segments WHERE segment_id = ? AND drive_identifier = ? AND dongle_id = ?', parseInt(segment), drive.identifier, device.dongle_id);
 
@@ -684,15 +684,15 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
         directorySegments["seg-" + segment] = '<tr><td>' + segment + '</td><td>' + qcamera + '</td><td>' + qlog + '</td><td>' + fcamera + '</td><td>' + rlog + '</td><td>' + dcamera + '</td><td>' + isProcessed + '</td><td>' + isStalled + '</td></tr>';
     }
 
-    var qcamera = '--';
-    var fcamera = '--';
-    var dcamera = '--';
-    var qlog = '--';
-    var rlog = '--';
-    var isProcessed = '?';
-    var isStalled = '?';
+    let qcamera = '--';
+    let fcamera = '--';
+    let dcamera = '--';
+    let qlog = '--';
+    let rlog = '--';
+    let isProcessed = '?';
+    let isStalled = '?';
 
-    for (var i = 0; i <= drive.max_segment; i++) {
+    for (let i = 0; i <= drive.max_segment; i++) {
         if (directorySegments["seg-" + i] == undefined) {
             response += '<tr><td>' + i + '</td><td>' + qcamera + '</td><td>' + qlog + '</td><td>' + fcamera + '</td><td>' + rlog + '</td><td>' + dcamera + '</td><td>' + isProcessed + '</td><td>' + isStalled + '</td></tr>';
         } else
