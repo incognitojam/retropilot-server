@@ -9,27 +9,16 @@ const { open } = require('sqlite')
 
 const lockfile = require('proper-lockfile');
 
-const http = require('http');
-const https = require('https');
-
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const cookieParser=require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
-const htmlspecialchars = require('htmlspecialchars');
-
 const dirTree = require("directory-tree");
-const { resolve } = require('path');
 const execSync = require('child_process').execSync;
 
 
 const Reader = require('@commaai/log_reader');
 var ffprobe = require('ffprobe'),
     ffprobeStatic = require('ffprobe-static');
-const { exception } = require('console');
- 
+
 var db = null;
 
 var lastCleaningTime=0;
