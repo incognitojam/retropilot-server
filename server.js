@@ -99,21 +99,22 @@ lockfile.lock('retropilot_server.lock', {realpath: false, stale: 30000, update: 
         (async () => {
 
 
-            const privateKey = fs.readFileSync(config.sslKey, 'utf8');
-            const certificate = fs.readFileSync(config.sslCrt, 'utf8');
-            const sslCredentials = {key: privateKey, cert: certificate/* ,    ca: fs.readFileSync('certs/ca.crt') */};
+            try {
+                const privateKey = fs.readFileSync(config.sslKey, 'utf8');
+                const certificate = fs.readFileSync(config.sslCrt, 'utf8');
+                const sslCredentials = {key: privateKey, cert: certificate/* ,    ca: fs.readFileSync('certs/ca.crt') */};
+
+                const httpsServer = https.createServer(sslCredentials, app);
+                httpsServer.listen(config.httpsPort, config.httpsInterface, () => {
+                    logger.info(`Retropilot Server listening at https://${config.httpsInterface}:${config.httpsPort}`)
+                });
+            } catch (err) {
+                logger.warn(err);
+            }
 
             const httpServer = http.createServer(app);
-            const httpsServer = https.createServer(sslCredentials, app);
-
-
-
-
             httpServer.listen(config.httpPort, config.httpInterface, () => {
-                logger.info(`Retropilot Server listening at http://` + config.httpInterface + `:` + config.httpPort)
-            });
-            httpsServer.listen(config.httpsPort, config.httpsInterface, () => {
-                logger.info(`Retropilot Server listening at https://` + config.httpsInterface + `:` + config.httpsPort)
+                logger.info(`Retropilot Server listening at http://${config.httpInterface}:${config.httpPort}`)
             });
 
         })();
