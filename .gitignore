@@ -32,3 +32,10 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# editors
+.idea
+*.iml
+.vscode
+.atom
+*.swp
