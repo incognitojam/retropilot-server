@@ -305,64 +305,66 @@ function processSegmentRLog(rLogPath) {
             resolve();
         });
 
-        reader(function (obj) {
-            try {
-                if (obj['LogMonoTime']!==undefined && obj['LogMonoTime']-rlog_lastTsInternal>=1000000*1000*0.99 && obj['GpsLocation']!==undefined) {
-                    logger.info('processSegmentRLog GpsLocation @ '+obj['LogMonoTime']+': '+obj['GpsLocation']['Latitude']+' '+obj['GpsLocation']['Longitude']);
+        try {
+            reader(function (obj) {
+                try {
+                    if (obj['LogMonoTime'] !== undefined && obj['LogMonoTime'] - rlog_lastTsInternal >= 1000000 * 1000 * 0.99 && obj['GpsLocation'] !== undefined) {
+                        logger.info('processSegmentRLog GpsLocation @ ' + obj['LogMonoTime'] + ': ' + obj['GpsLocation']['Latitude'] + ' ' + obj['GpsLocation']['Longitude']);
 
-                    if (rlog_prevLatInternal!=-1000) {
-                        const lat1=rlog_prevLatInternal;
-                        const lat2=obj['GpsLocation']['Latitude'];
-                        const lon1=rlog_prevLngInternal;
-                        const lon2=obj['GpsLocation']['Longitude'];
-                        const p = 0.017453292519943295;    // Math.PI / 180
-                        const c = Math.cos;
-                        const a = 0.5 - c((lat2 - lat1) * p)/2 +
-                                c(lat1 * p) * c(lat2 * p) *
-                                (1 - c((lon2 - lon1) * p))/2;
+                        if (rlog_prevLatInternal != -1000) {
+                            const lat1 = rlog_prevLatInternal;
+                            const lat2 = obj['GpsLocation']['Latitude'];
+                            const lon1 = rlog_prevLngInternal;
+                            const lon2 = obj['GpsLocation']['Longitude'];
+                            const p = 0.017453292519943295;    // Math.PI / 180
+                            const c = Math.cos;
+                            const a = 0.5 - c((lat2 - lat1) * p) / 2 +
+                              c(lat1 * p) * c(lat2 * p) *
+                              (1 - c((lon2 - lon1) * p)) / 2;
 
-                        let dist_m = 1000 * 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
-                        if (dist_m>70) dist_m=0; // each segment is max. 60s. if the calculated speed would exceed ~250km/h for this segment, we assume the coordinates off / defective and skip it
-                        rlog_totalDistInternal+=dist_m;
+                            let dist_m = 1000 * 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
+                            if (dist_m > 70) dist_m = 0; // each segment is max. 60s. if the calculated speed would exceed ~250km/h for this segment, we assume the coordinates off / defective and skip it
+                            rlog_totalDistInternal += dist_m;
+                        }
+                        rlog_prevLatInternal = obj['GpsLocation']['Latitude'];
+                        rlog_prevLngInternal = obj['GpsLocation']['Longitude'];
+                        rlog_lastTsInternal = obj['LogMonoTime'];
+                    } else if (obj['LogMonoTime'] !== undefined && obj['LogMonoTime'] - rlog_lastTsExternal >= 1000000 * 1000 * 0.99 && obj['GpsLocationExternal'] !== undefined) {
+                        logger.info('processSegmentRLog GpsLocationExternal @ ' + obj['LogMonoTime'] + ': ' + obj['GpsLocationExternal']['Latitude'] + ' ' + obj['GpsLocationExternal']['Longitude']);
+
+                        if (rlog_prevLatExternal != -1000) {
+                            const lat1 = rlog_prevLatExternal;
+                            const lat2 = obj['GpsLocationExternal']['Latitude'];
+                            const lon1 = rlog_prevLngExternal;
+                            const lon2 = obj['GpsLocationExternal']['Longitude'];
+                            const p = 0.017453292519943295;    // Math.PI / 180
+                            const c = Math.cos;
+                            const a = 0.5 - c((lat2 - lat1) * p) / 2 +
+                              c(lat1 * p) * c(lat2 * p) *
+                              (1 - c((lon2 - lon1) * p)) / 2;
+
+                            let dist_m = 1000 * 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
+                            if (dist_m > 70) dist_m = 0; // each segment is max. 60s. if the calculated speed would exceed ~250km/h for this segment, we assume the coordinates off / defective and skip it
+                            rlog_totalDistExternal += dist_m;
+                        }
+                        rlog_prevLatExternal = obj['GpsLocationExternal']['Latitude'];
+                        rlog_prevLngExternal = obj['GpsLocationExternal']['Longitude'];
+                        rlog_lastTsExternal = obj['LogMonoTime'];
+                    } else if (obj['LogMonoTime'] !== undefined && obj['CarParams'] !== undefined && rlog_CarParams == null) {
+                        rlog_CarParams = obj['CarParams'];
+                    } else if (obj['LogMonoTime'] !== undefined && obj['InitData'] !== undefined && rlog_InitData == null) {
+                        rlog_InitData = obj['InitData'];
                     }
-                    rlog_prevLatInternal=obj['GpsLocation']['Latitude'];
-                    rlog_prevLngInternal=obj['GpsLocation']['Longitude'];
-                    rlog_lastTsInternal = obj['LogMonoTime'];
-                }
-                else if (obj['LogMonoTime']!==undefined && obj['LogMonoTime']-rlog_lastTsExternal>=1000000*1000*0.99 && obj['GpsLocationExternal']!==undefined) {
-                    logger.info('processSegmentRLog GpsLocationExternal @ '+obj['LogMonoTime']+': '+obj['GpsLocationExternal']['Latitude']+' '+obj['GpsLocationExternal']['Longitude']);
 
-                    if (rlog_prevLatExternal!=-1000) {
-                        const lat1=rlog_prevLatExternal;
-                        const lat2=obj['GpsLocationExternal']['Latitude'];
-                        const lon1=rlog_prevLngExternal;
-                        const lon2=obj['GpsLocationExternal']['Longitude'];
-                        const p = 0.017453292519943295;    // Math.PI / 180
-                        const c = Math.cos;
-                        const a = 0.5 - c((lat2 - lat1) * p)/2 +
-                                c(lat1 * p) * c(lat2 * p) *
-                                (1 - c((lon2 - lon1) * p))/2;
-
-                        let dist_m = 1000 * 12742 * Math.asin(Math.sqrt(a)); // 2 * R; R = 6371 km
-                        if (dist_m>70) dist_m=0; // each segment is max. 60s. if the calculated speed would exceed ~250km/h for this segment, we assume the coordinates off / defective and skip it
-                        rlog_totalDistExternal+=dist_m;
-                    }
-                    rlog_prevLatExternal=obj['GpsLocationExternal']['Latitude'];
-                    rlog_prevLngExternal=obj['GpsLocationExternal']['Longitude'];
-                    rlog_lastTsExternal = obj['LogMonoTime'];
+                } catch (exception) {
+                    console.error(exception)
+                    logger.error('error in result calc during processSegmentRLog: ' + exception)
                 }
-                else if (obj['LogMonoTime']!==undefined && obj['CarParams']!==undefined && rlog_CarParams==null) {
-                    rlog_CarParams = obj['CarParams'];
-                }
-                else if (obj['LogMonoTime']!==undefined && obj['InitData']!==undefined && rlog_InitData==null) {
-                    rlog_InitData = obj['InitData'];
-                }
-
-            } catch(exception) {
-                console.error(exception)
-                logger.error('error in reader during processSegmentRLog: ' + exception)
-            }
-        });
+            });
+        } catch (exception) {
+            console.error(exception)
+            logger.error('error in reader during processSegmentRLog: ' + exception)
+        }
       }
   ).then(() => logger.debug('done processSegmentRLog()'));
 }
