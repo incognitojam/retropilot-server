@@ -426,8 +426,8 @@ router.get('/useradmin/device/:dongleId', runAsyncWrapper(async (req, res) => {
                 if (metadata['CarParams']!=undefined && metadata['CarParams']['CarFingerprint']!=undefined)
                 vehicle += htmlspecialchars(metadata['CarParams']['CarFingerprint'].toUpperCase());
         } catch (exception) {}
-        
-        response += '<tr><td><a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '">' + (drives[i].is_preserved ? '<b>' : '') + drives[i].identifier + (drives[i].is_preserved ? '</b>' : '') + '</a></td><td>'+vehicle+'</td><td>'+version+'</td><td>' + Math.round(drives[i].filesize / 1024) + ' MiB</td><td>' + controllers.helpers.formatDuration(drives[i].duration) + '</td><td>' + Math.round(drives[i].distance_meters / 1000) + ' km</td><td>' + drives[i].upload_complete + '</td><td>' + drives[i].is_processed + '</td><td>' + controllers.helpers.formatDate(drives[i].created) + '</td><td>' + '[<a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '/delete" onclick="return confirm(\'Permanently delete this drive?\')">delete</a>]' + (drives[i].is_preserved ? '' : '&nbsp;&nbsp;[<a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '/preserve">preserve</a>]') + '</tr>';
+
+        response += '<tr><td><a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '">' + (drives[i].is_preserved ? '<b>' : '') + drives[i].identifier + (drives[i].is_preserved ? '</b>' : '') + '</a></td><td>'+vehicle+'</td><td>'+version+'</td><td>' + Math.round(drives[i].filesize / 1024) + ' MiB</td><td>' + controllers.helpers.formatDuration(drives[i].duration) + '</td><td>' + Math.round(drives[i].distance_meters / 1000) + ' km</td><td>' + drives[i].upload_complete + '</td><td>' + drives[i].is_processed + '</td><td>' + controllers.helpers.formatDate(drives[i].created) + '</td><td>' + '[<a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '/delete" onclick="return confirm(\'Permanently delete this drive?\')">delete</a>]' + (drives[i].is_preserved ? '&nbsp;&nbsp;[<a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '/unpreserve">unpreserve</a>]' : '&nbsp;&nbsp;[<a href="/useradmin/drive/' + drives[i].dongle_id + '/' + drives[i].identifier + '/preserve">preserve</a>]') + '</tr>';
     }
     response += `</table>
                 <br>
@@ -475,6 +475,11 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier/:action', runAsyncWrappe
         const result = await models.__db.run(
             'UPDATE drives SET is_preserved = ? WHERE id = ?',
             true, drive.id
+        );
+    } else if (req.params.action == 'unpreserve') {
+        const result = await models.__db.run(
+          'UPDATE drives SET is_preserved = ? WHERE id = ?',
+          false, drive.id
         );
     }
 
@@ -665,7 +670,7 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
         let rlog = '--';
         for (const c in directoryTree.children[i].children) {
             if (directoryTree.children[i].children[c].name == 'fcamera.hevc') fcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
-            if (directoryTree.children[i].children[c].name == 'dcamera.hevc') fcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
+            if (directoryTree.children[i].children[c].name == 'dcamera.hevc') dcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
             if (directoryTree.children[i].children[c].name == 'qcamera.ts') qcamera = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
             if (directoryTree.children[i].children[c].name == 'qlog.bz2') qlog = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
             if (directoryTree.children[i].children[c].name == 'rlog.bz2') rlog = '<a target="_blank" href="' + driveUrl + segment + '/' + directoryTree.children[i].children[c].name + '">' + directoryTree.children[i].children[c].name + '</a>';
