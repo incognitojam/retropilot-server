@@ -9,3 +9,4 @@ database.sqlite
 test/.devKeys
 npm-debug.log
 *.env
+./data
