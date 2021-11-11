@@ -9,4 +9,7 @@ database.sqlite
 test/.devKeys
 npm-debug.log
 *.env
+!*.example.env
 ./data
+docker-compose*.yml
+!docker-compose.example.yml
