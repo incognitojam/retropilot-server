@@ -1,3 +1,4 @@
+const fs = require('fs')
 const sqlite3 = require('sqlite3')
 const {open} = require('sqlite')
 const config = require('./../config');
@@ -25,6 +26,22 @@ async function validateDatabase(db, logger) {
 
 module.exports = async (logger) => {
     let db;
+
+    // check whether the database file exists
+    if (!fs.existsSync(config.databaseFile)) {
+        if (fs.existsSync('database.empty.sqlite')) {
+            logger.warn('Database file does not exist, copying empty database template...')
+            try {
+                fs.copyFileSync('database.empty.sqlite', config.databaseFile)
+                logger.info('Copied empty database to', config.databaseFile)
+            } catch (e) {
+                logger.error('Failed to copy database template', e)
+            }
+
+        } else {
+            logger.warn('Database file does not exist', config.databaseFile)
+        }
+    }
 
     try {
         db = await open({
