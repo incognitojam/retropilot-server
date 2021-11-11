@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/etc/retropilot
+      - .:/etc/retropilot
     env_file:
       - server-variables.env
   retropilot-worker:
@@ -15,6 +15,6 @@ services:
     command: /usr/local/bin/node worker.js
     restart: unless-stopped
     volumes:
-      - ./data:/etc/retropilot
+      - .:/etc/retropilot
     env_file:
       - server-variables.env

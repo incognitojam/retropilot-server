@@ -1,8 +1,8 @@
 node_modules/
 realdata/
-worker.log
-server.log
-database.sqlite
+*.log
+*.sqlite
+!database.empty.sqlite
 .vscode
 .idea
 *.iml
@@ -10,6 +10,5 @@ test/.devKeys
 npm-debug.log
 *.env
 !*.example.env
-./data
 docker-compose*.yml
 !docker-compose.example.yml
