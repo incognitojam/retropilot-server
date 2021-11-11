@@ -359,7 +359,8 @@ function processSegmentRLog(rLogPath) {
                 }
 
             } catch(exception) {
-
+                console.error(exception)
+                logger.error('error in reader during processSegmentRLog: ' + exception)
             }
         });
       }
