@@ -368,7 +368,11 @@ function processSegmentRLog(rLogPath) {
             throw exception
         }
       }
-  ).then(() => logger.debug('done processSegmentRLog()'));
+  ).then(() => logger.debug('done processSegmentRLog()')).catch(e => {
+      console.error(e)
+        logger.error(e)
+        throw e
+    });
 }
 
 function processSegmentVideo(qcameraPath) {
