@@ -92,7 +92,7 @@ const web = async () => {
 
 
 
-lockfile.lock('retropilot_server.lock', {realpath: false, stale: 30000, update: 2000})
+lockfile.lock('retropilot_server', {realpath: false, stale: 30000, update: 2000})
     .then((release) => {
         console.log("STARTING SERVER...");
         web();

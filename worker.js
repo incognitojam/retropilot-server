@@ -762,7 +762,7 @@ catch (exception) {
 }
 
 
-lockfile.lock('retropilot_worker.lock', { realpath: false, stale: 90000, update: 2000 })
+lockfile.lock('retropilot_worker', { realpath: false, stale: 90000, update: 2000 })
 .then((release) => {
     logger.info("STARTING WORKER...");
 
