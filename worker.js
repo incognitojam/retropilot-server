@@ -363,7 +363,7 @@ function processSegmentRLog(rLogPath) {
             }
         });
       }
-  );
+  ).then(() => logger.debug('done processSegmentRLog()'));
 }
 
 function processSegmentVideo(qcameraPath) {
@@ -381,7 +381,7 @@ function processSegmentVideo(qcameraPath) {
             logger.error('processSegmentVideo error: '+err);
             resolve();
         });
-    });
+    }).then(() => logger.debug('done processSegmentVideo()'));
 }
 
 function processSegmentsRecursive() {
