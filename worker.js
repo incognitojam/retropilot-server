@@ -359,11 +359,13 @@ function processSegmentRLog(rLogPath) {
                 } catch (exception) {
                     console.error(exception)
                     logger.error('error in result calc during processSegmentRLog: ' + exception)
+                    throw exception
                 }
             });
         } catch (exception) {
             console.error(exception)
             logger.error('error in reader during processSegmentRLog: ' + exception)
+            throw exception
         }
       }
   ).then(() => logger.debug('done processSegmentRLog()'));
