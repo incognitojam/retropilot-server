@@ -544,7 +544,8 @@ router.get('/useradmin/drive/:dongleId/:driveIdentifier', runAsyncWrapper(async 
             vehicle += htmlspecialchars(metadata['CarParams']['CarFingerprint'].toUpperCase());
     } catch (exception) {}
 
-    const directoryTree = dirTree(config.storagePath + device.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier);
+    const path = config.storagePath + device.dongle_id + "/" + dongleIdHash + "/" + driveIdentifierHash + "/" + drive.identifier;
+    const directoryTree = dirTree(path, { attributes: ['type'] });
 
 
     let response = `<html style="font-family: monospace">
